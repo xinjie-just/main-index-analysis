@@ -14,10 +14,8 @@ function toPercent(value) {
   }
   const num =
     typeof value === "number" ? value : parseFloat(String(value).trim());
-  // 收益率/波动率通常在 -1 到 1 之间（如 0.12），但也可能大于1（如 1.23 表示123%）
-  // 我们放宽判断：只要不是明显非比率（如样本数量300），就转百分比
   if (isNaN(num) || num < -10 || num > 100) {
-    return String(value).trim(); // 非比率数据原样返回
+    return String(value).trim();
   }
   return (num * 100).toFixed(2) + "%";
 }
@@ -27,7 +25,6 @@ function excelDateToDateString(excelDate) {
     const str = String(excelDate).trim();
     if (!str) return "";
     if (/^\d{4}[/\-]\d{1,2}[/\-]\d{1,2}/.test(str)) {
-      // 尝试标准化日期格式
       const d = new Date(str);
       if (!isNaN(d.getTime())) {
         const y = d.getFullYear();
@@ -45,13 +42,17 @@ function excelDateToDateString(excelDate) {
   return `${year}-${month}-${day}`;
 }
 
-function createScrollableTable(headers, values) {
-  if (headers.length === 0) return "无数据\n\n";
+// 新增：生成竖排表格（两列：标签 | 值）
+function createVerticalTable(labels, values) {
+  if (labels.length === 0) return "无数据\n\n";
   const formattedValues = values.map((v) => toPercent(v));
-  const headerRow = `| ${headers.join(" | ")} |\n`;
-  const separator = `|${headers.map(() => "---").join("|")}|\n`;
-  const dataRow = `| ${formattedValues.join(" | ")} |\n`;
-  return `<div style="overflow-x: auto;">\n\n${headerRow}${separator}${dataRow}\n</div>\n\n`;
+  let table = "| 年份/周期 | 数值 |\n|----------|------|\n";
+  for (let i = 0; i < labels.length; i++) {
+    const label = labels[i] || "";
+    const val = formattedValues[i] || "";
+    table += `| ${label} | ${val} |\n`;
+  }
+  return `\n\n${table}\n\n`;
 }
 
 // ======================
@@ -83,14 +84,12 @@ if (rows.length < 3) {
 const firstHeader = rows[0].map((v) => String(v || "").trim());
 const secondHeader = rows[1].map((v) => String(v || "").trim());
 
-// 构建完整列名 headers
 const headers = [];
 for (let i = 0; i < secondHeader.length; i++) {
   if (secondHeader[i]) {
-    headers.push(secondHeader[i]); // 年份或"近X年"
+    headers.push(secondHeader[i]);
   } else {
     const first = firstHeader[i] || "";
-    // 如果第一行是独立字段（且不是带子列的一级标题），则使用它
     if (
       first &&
       ![
@@ -106,7 +105,6 @@ for (let i = 0; i < secondHeader.length; i++) {
   }
 }
 
-// 定义各部分列范围
 const RETURN_YEARS = Array.from({ length: 21 }, (_, i) => String(2005 + i)); // 2005-2025
 const RECENT_PERIODS = [
   "近1年",
@@ -122,7 +120,6 @@ const RECENT_PERIODS = [
   "近21年",
 ];
 
-// 找到收益率起始列
 const returnStart = headers.indexOf("2005");
 if (returnStart === -1) {
   console.error('❌ 未找到 "2005" 列');
@@ -130,16 +127,15 @@ if (returnStart === -1) {
 }
 
 const returnEnd = returnStart + RETURN_YEARS.length - 1;
-const volStart = returnEnd + 1;
+const volStart = returnEnd + 4;
 const volEnd = volStart + RETURN_YEARS.length - 1;
-const recentStart = volEnd + 1;
+const recentStart = volEnd + 2;
 const recentEnd = recentStart + RECENT_PERIODS.length - 1;
 
 console.log(`✅ 收益率: ${returnStart}-${returnEnd}`);
 console.log(`✅ 波动率: ${volStart}-${volEnd}`);
 console.log(`✅ 近几年年化: ${recentStart}-${recentEnd}`);
 
-// 主字段列表（必须出现在非年份区域）
 const mainFields = [
   "指数简称",
   "指数代码",
@@ -156,7 +152,6 @@ const mainFields = [
   "基日以来全部年份年平均收益(%)",
 ];
 
-// 建立字段 → 列索引映射
 const fieldToCol = new Map();
 for (let i = 0; i < headers.length; i++) {
   const h = headers[i];
@@ -165,17 +160,21 @@ for (let i = 0; i < headers.length; i++) {
   }
 }
 
-// 输出目录
 const outputDir = path.resolve(__dirname, "认识指数");
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
-// 特殊处理字段
 const dateFields = ["基日", "发布日期"];
 const avgReturnField = "基日以来全部年份年平均收益(%)";
 
-// 处理每一行数据
+// 统一开头说明
+const introNote = `> - 基础数据来源：[中证指数](https://www.csindex.com.cn/)。  
+> - 基日以来全部年份年平均收益(%)、指定年份年收益(%)、指定年份年波动率(%)、基日以来近几年年化收益(%)，是通过每日收盘数据计算得出的。数据截止时间是 2025 年 12 月 31 日。  
+> - 市场有风险，投资需谨慎。本文仅作指数知识普及，不构成任何投资建议。  
+
+`;
+
 for (let rowIndex = 2; rowIndex < rows.length; rowIndex++) {
   const row = rows[rowIndex];
   if (!row || row.every((cell) => cell === "" || cell == null)) continue;
@@ -186,7 +185,7 @@ for (let rowIndex = 2; rowIndex < rows.length; rowIndex++) {
   const indexShortName = String(shortNameCell || "").trim();
   if (!indexShortName) continue;
 
-  let md = "";
+  let md = introNote; // ← 添加开头说明
 
   // 写入主字段
   for (const field of mainFields) {
@@ -204,32 +203,36 @@ for (let rowIndex = 2; rowIndex < rows.length; rowIndex++) {
     md += `## ${field}\n\n${value || "无"}\n\n`;
   }
 
-  // 年收益表格
+  // 指定年份年收益（竖排）
   md += `## 指定年份年收益(%)\n\n`;
   const returnValues = [];
   for (let i = 0; i < RETURN_YEARS.length; i++) {
     const col = returnStart + i;
     returnValues.push(col < row.length ? row[col] : "");
   }
-  md += createScrollableTable(RETURN_YEARS, returnValues);
+  md += createVerticalTable(RETURN_YEARS, returnValues);
 
-  // 年波动率表格
+  // 指定年份年波动率（竖排）
   md += `## 指定年份年波动率(%)\n\n`;
   const volValues = [];
   for (let i = 0; i < RETURN_YEARS.length; i++) {
     const col = volStart + i;
     volValues.push(col < row.length ? row[col] : "");
   }
-  md += createScrollableTable(RETURN_YEARS, volValues);
+  md += createVerticalTable(RETURN_YEARS, volValues);
 
-  // 近几年年化收益表格
+  // 近几年年化收益（竖排）
   md += `## 基日以来近几年年化收益(%)\n\n`;
   const recentValues = [];
   for (let i = 0; i < RECENT_PERIODS.length; i++) {
     const col = recentStart + i;
     recentValues.push(col < row.length ? row[col] : "");
   }
-  md += createScrollableTable(RECENT_PERIODS, recentValues);
+  md += createVerticalTable(RECENT_PERIODS, recentValues);
+
+  // 新增：市场占比 & 行业分布
+  md += `## 市场占比\n\n<small>更新日期: 2026-01-12</small>\n\n`;
+  md += `## 行业分布\n\n<small>更新日期: 2026-01-12</small>\n\n`;
 
   // 保存文件
   const fileName = `认识“${indexShortName}”指数.md`;

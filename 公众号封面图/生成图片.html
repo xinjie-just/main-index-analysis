@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>股票走势图风格图片生成器</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      }
+
+      body {
+        background-color: #f5f7fa;
+        color: #333;
+        line-height: 1.6;
+        padding: 20px;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+
+      header {
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: white;
+        padding: 25px 30px;
+      }
+
+      h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+      }
+
+      h1 i {
+        margin-right: 12px;
+        font-size: 32px;
+      }
+
+      .subtitle {
+        font-size: 16px;
+        opacity: 0.85;
+      }
+
+      .main-content {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 25px;
+      }
+
+      .canvas-container {
+        flex: 1;
+        min-width: 600px;
+        padding: 10px;
+        border-right: 1px solid #eee;
+      }
+
+      .canvas-wrapper {
+        position: relative;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 15px;
+        background-color: white;
+        max-width: 1188px;
+        max-height: 506px;
+        overflow: auto;
+      }
+
+      canvas {
+        display: block;
+        background-color: white;
+      }
+
+      .controls {
+        flex: 1;
+        min-width: 350px;
+        padding: 10px 20px;
+      }
+
+      .control-group {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px dashed #e0e0e0;
+      }
+
+      h2 {
+        font-size: 20px;
+        color: #2a5298;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+      }
+
+      h2 i {
+        margin-right: 10px;
+        font-size: 22px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #444;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+        transition: border 0.3s;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #2a5298;
+        box-shadow: 0 0 0 2px rgba(42, 82, 152, 0.1);
+      }
+
+      .btn {
+        display: inline-block;
+        background: linear-gradient(to right, #1e3c72, #2a5298);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(30, 60, 114, 0.2);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .download-btn {
+        background: linear-gradient(to right, #0a8d48, #10b759);
+      }
+
+      .predefined-words {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .word-tag {
+        padding: 8px 16px;
+        background-color: #f0f5ff;
+        border: 1px solid #c2d1ff;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .word-tag:hover {
+        background-color: #d9e4ff;
+        transform: translateY(-2px);
+      }
+
+      .word-tag.active {
+        background-color: #2a5298;
+        color: white;
+        border-color: #2a5298;
+      }
+
+      .color-size-controls {
+        display: flex;
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      .color-picker-container,
+      .font-size-container {
+        flex: 1;
+      }
+
+      input[type="color"] {
+        width: 100%;
+        height: 40px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .font-size-slider {
+        width: 100%;
+        margin-top: 5px;
+      }
+
+      .font-size-value {
+        display: inline-block;
+        margin-left: 10px;
+        font-weight: bold;
+        color: #2a5298;
+      }
+
+      .instructions {
+        background-color: #f9f9ff;
+        border-left: 4px solid #2a5298;
+        padding: 18px;
+        margin-top: 25px;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .instructions h3 {
+        color: #2a5298;
+        margin-bottom: 10px;
+        font-size: 18px;
+      }
+
+      .instructions ul {
+        padding-left: 20px;
+      }
+
+      .instructions li {
+        margin-bottom: 8px;
+      }
+
+      footer {
+        text-align: center;
+        padding: 20px;
+        color: #777;
+        font-size: 14px;
+        border-top: 1px solid #eee;
+      }
+
+      .canvas-info {
+        text-align: center;
+        color: #666;
+        margin-top: 10px;
+        font-size: 14px;
+        background-color: #f9f9ff;
+        padding: 10px;
+        border-radius: 6px;
+        border-left: 3px solid #2a5298;
+      }
+
+      @media (max-width: 1400px) {
+        .main-content {
+          flex-direction: column;
+        }
+
+        .canvas-container,
+        .controls {
+          min-width: 100%;
+          border-right: none;
+          border-bottom: 1px solid #eee;
+        }
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1><i class="fas fa-chart-line"></i> 股票走势图风格图片生成器</h1>
+        <p class="subtitle">
+          生成1188×506尺寸的白色背景图片，带有红绿竖线走势图和自定义文字
+        </p>
+      </header>
+
+      <div class="main-content">
+        <div class="canvas-container">
+          <div class="canvas-wrapper">
+            <canvas id="stockCanvas" width="1188" height="506"></canvas>
+          </div>
+          <div class="canvas-info">
+            <p>
+              <i class="fas fa-info-circle"></i> 预览图 - 尺寸: 1188 × 506 像素
+              (原尺寸的2倍)
+            </p>
+            <p>
+              红线上涨 | 绿线下跌 | 竖线更长更窄 | 下载文件名: "认识XXXX.png"
+            </p>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="control-group">
+            <h2><i class="fas fa-edit"></i> 自定义文字</h2>
+            <label for="firstLine">第一行文字 (固定)</label>
+            <input type="text" id="firstLine" value="认识" readonly />
+
+            <label for="secondLine" style="margin-top: 20px"
+              >第二行文字 (可变化)</label
+            >
+            <input
+              type="text"
+              id="secondLine"
+              placeholder="输入第二行文字，例如：价值、市场、趋势等"
+            />
+
+            <p style="margin-top: 15px; font-size: 14px; color: #666">
+              或从以下常用词汇中选择：
+            </p>
+            <div class="predefined-words" id="predefinedWords">
+              <!-- 预定义词汇将通过JS生成 -->
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h2><i class="fas fa-palette"></i> 文字样式</h2>
+            <div class="color-size-controls">
+              <div class="color-picker-container">
+                <label for="textColor">文字颜色</label>
+                <input type="color" id="textColor" value="#ff0000" />
+              </div>
+              <div class="font-size-container">
+                <label for="secondLineFontSize">第二行文字大小</label>
+                <div>
+                  <input
+                    type="range"
+                    id="secondLineFontSize"
+                    class="font-size-slider"
+                    min="80"
+                    max="160"
+                    value="120"
+                  />
+                  <span id="fontSizeValue" class="font-size-value">120</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h2><i class="fas fa-chart-bar"></i> 走势图样式</h2>
+            <label for="lineCount">竖线数量</label>
+            <input
+              type="range"
+              id="lineCount"
+              class="font-size-slider"
+              min="40"
+              max="120"
+              value="80"
+            />
+            <span id="lineCountValue" class="font-size-value">80</span>
+
+            <label for="lineWidth" style="margin-top: 15px">竖线宽度</label>
+            <input
+              type="range"
+              id="lineWidth"
+              class="font-size-slider"
+              min="1"
+              max="10"
+              value="3"
+            />
+            <span id="lineWidthValue" class="font-size-value">3</span>
+
+            <label for="lineHeight" style="margin-top: 15px"
+              >竖线高度波动</label
+            >
+            <input
+              type="range"
+              id="lineHeight"
+              class="font-size-slider"
+              min="5"
+              max="30"
+              value="15"
+            />
+            <span id="lineHeightValue" class="font-size-value">15</span>
+          </div>
+
+          <button class="btn" id="generateBtn">
+            <i class="fas fa-sync-alt"></i> 重新生成走势图
+          </button>
+
+          <button class="btn download-btn" id="downloadBtn">
+            <i class="fas fa-download"></i> 下载图片 (文件名: 认识XXXX.png)
+          </button>
+
+          <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> 使用说明</h3>
+            <ul>
+              <li>第二行文字可自定义输入，也可点击上方标签快速选择</li>
+              <li>上涨竖线显示为红色，下跌竖线显示为绿色</li>
+              <li>竖线更长更窄，符合您的需求</li>
+              <li>图片尺寸为1188×506像素，是原尺寸的2倍</li>
+              <li>文字颜色可自定义，默认使用红色</li>
+              <li>第二行文字大小可调节，字体不加粗</li>
+              <li>点击"下载图片"将保存名为"认识XXXX.png"的图片</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <p>
+          股票走势图风格图片生成器 &copy; 2023 | 图片尺寸: 1188 × 506 像素
+          (2倍尺寸) | 背景: 白色 | 下载文件名: 认识XXXX.png
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // 预定义的第二行文字选项
+        const predefinedWords = [
+          "价值",
+          "市场",
+          "趋势",
+          "投资",
+          "成长",
+          "机遇",
+          "风险",
+          "财富",
+          "未来",
+          "智慧",
+          "决策",
+          "成功",
+        ];
+
+        // 获取DOM元素
+        const canvas = document.getElementById("stockCanvas");
+        const ctx = canvas.getContext("2d");
+        const firstLineInput = document.getElementById("firstLine");
+        const secondLineInput = document.getElementById("secondLine");
+        const textColorInput = document.getElementById("textColor");
+        const fontSizeInput = document.getElementById("secondLineFontSize");
+        const fontSizeValue = document.getElementById("fontSizeValue");
+        const lineCountInput = document.getElementById("lineCount");
+        const lineCountValue = document.getElementById("lineCountValue");
+        const lineWidthInput = document.getElementById("lineWidth");
+        const lineWidthValue = document.getElementById("lineWidthValue");
+        const lineHeightInput = document.getElementById("lineHeight");
+        const lineHeightValue = document.getElementById("lineHeightValue");
+        const generateBtn = document.getElementById("generateBtn");
+        const downloadBtn = document.getElementById("downloadBtn");
+        const predefinedWordsContainer =
+          document.getElementById("predefinedWords");
+
+        // 绘制初始图片
+        drawStockChart();
+
+        // 生成预定义词汇标签
+        predefinedWords.forEach((word) => {
+          const tag = document.createElement("div");
+          tag.className = "word-tag";
+          tag.textContent = word;
+          tag.addEventListener("click", () => {
+            secondLineInput.value = word;
+            drawStockChart();
+
+            // 激活当前选中的标签
+            document
+              .querySelectorAll(".word-tag")
+              .forEach((t) => t.classList.remove("active"));
+            tag.classList.add("active");
+          });
+          predefinedWordsContainer.appendChild(tag);
+        });
+
+        // 生成走势图函数
+        function drawStockChart() {
+          // 清空画布
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // 绘制白色背景
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // 获取当前设置
+          const firstLine = firstLineInput.value;
+          const secondLine = secondLineInput.value || "价值";
+          const textColor = textColorInput.value;
+          const fontSize = parseInt(fontSizeInput.value);
+          const lineCount = parseInt(lineCountInput.value);
+          const lineWidth = parseInt(lineWidthInput.value);
+          const lineHeightFactor = parseInt(lineHeightInput.value);
+
+          // 绘制红绿竖线走势图
+          drawVerticalLinesChart(lineCount, lineWidth, lineHeightFactor);
+
+          // 绘制文字
+          drawText(firstLine, secondLine, textColor, fontSize);
+        }
+
+        // 绘制红绿竖线走势图
+        function drawVerticalLinesChart(
+          lineCount,
+          lineWidth,
+          lineHeightFactor
+        ) {
+          const padding = 40; // 内边距加倍
+          const chartWidth = canvas.width - 2 * padding;
+          const chartHeight = canvas.height - 2 * padding;
+
+          // 计算竖线宽度和间距
+          const lineSpacing = chartWidth / lineCount;
+
+          // 生成震荡向上的数据点
+          const prices = [];
+          let currentPrice = chartHeight * 0.5; // 起始价格在中间
+          const upwardTrend = -chartHeight * 0.005; // 总体向上趋势（更平缓）
+
+          for (let i = 0; i < lineCount; i++) {
+            // 添加随机波动，波动幅度更大（竖线更长）
+            const randomChange =
+              (Math.random() - 0.5) * chartHeight * (lineHeightFactor / 100);
+            currentPrice += randomChange + upwardTrend;
+
+            // 确保价格在合理范围内
+            if (currentPrice < chartHeight * 0.1)
+              currentPrice =
+                chartHeight * 0.1 + Math.random() * chartHeight * 0.05;
+            if (currentPrice > chartHeight * 0.9)
+              currentPrice =
+                chartHeight * 0.9 - Math.random() * chartHeight * 0.05;
+
+            prices.push(currentPrice);
+          }
+
+          // 绘制竖线
+          for (let i = 0; i < lineCount; i++) {
+            const x = padding + i * lineSpacing + (lineSpacing - lineWidth) / 2;
+            const price = prices[i];
+            const prevPrice = i > 0 ? prices[i - 1] : price;
+
+            // 确定颜色：上涨为红色，下跌为绿色
+            let lineColor;
+            if (price >= prevPrice) {
+              lineColor = "#ff4d4f"; // 红色 - 上涨
+            } else {
+              lineColor = "#52c41a"; // 绿色 - 下跌
+            }
+
+            // 计算竖线的起始位置和高度
+            const startY = padding + Math.min(price, prevPrice);
+            const lineHeight = Math.abs(price - prevPrice) + 4; // 增加竖线高度
+
+            // 绘制竖线（更窄更长）
+            ctx.fillStyle = lineColor;
+            ctx.fillRect(x, startY, lineWidth, lineHeight);
+
+            // 绘制价格点（小圆点，更小）
+            ctx.beginPath();
+            ctx.arc(
+              x + lineWidth / 2,
+              padding + price,
+              Math.max(2, lineWidth / 2),
+              0,
+              Math.PI * 2
+            );
+            ctx.fillStyle = lineColor;
+            ctx.fill();
+          }
+        }
+
+        // 绘制文字
+        function drawText(
+          firstLine,
+          secondLine,
+          textColor,
+          secondLineFontSize
+        ) {
+          // 计算中心位置
+          const centerX = canvas.width / 2;
+          const centerY = canvas.height / 2;
+
+          // 绘制第一行文字 - 认识 (加粗，大字体，加倍)
+          ctx.fillStyle = textColor;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.font = `bold 140px "Microsoft YaHei", "PingFang SC", sans-serif`;
+          ctx.fillText(firstLine, centerX, centerY - 100);
+
+          // 绘制第二行文字 - 可变化文字 (不加粗，可调整大小，加倍)
+          ctx.font = `${secondLineFontSize}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+          ctx.fillText(secondLine, centerX, centerY + 100);
+        }
+
+        // 事件监听
+        generateBtn.addEventListener("click", drawStockChart);
+
+        secondLineInput.addEventListener("input", function () {
+          drawStockChart();
+
+          // 如果输入框内容与预定义词汇匹配，则激活对应标签
+          document.querySelectorAll(".word-tag").forEach((tag) => {
+            if (tag.textContent === this.value) {
+              document
+                .querySelectorAll(".word-tag")
+                .forEach((t) => t.classList.remove("active"));
+              tag.classList.add("active");
+            }
+          });
+        });
+
+        textColorInput.addEventListener("change", drawStockChart);
+
+        fontSizeInput.addEventListener("input", function () {
+          fontSizeValue.textContent = this.value;
+          drawStockChart();
+        });
+
+        lineCountInput.addEventListener("input", function () {
+          lineCountValue.textContent = this.value;
+          drawStockChart();
+        });
+
+        lineWidthInput.addEventListener("input", function () {
+          lineWidthValue.textContent = this.value;
+          drawStockChart();
+        });
+
+        lineHeightInput.addEventListener("input", function () {
+          lineHeightValue.textContent = this.value;
+          drawStockChart();
+        });
+
+        // 下载图片功能 - 修改了文件名格式
+        downloadBtn.addEventListener("click", function () {
+          const secondLineValue = secondLineInput.value || "价值";
+          // 使用更简洁的文件名格式："认识XXXX.png"
+          const fileName = `认识${secondLineValue}.png`;
+          const link = document.createElement("a");
+          link.download = fileName;
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+        });
+
+        // 初始化时选择第一个预定义词汇
+        if (predefinedWordsContainer.firstChild) {
+          predefinedWordsContainer.firstChild.click();
+        }
+
+        // 更新显示值
+        fontSizeValue.textContent = fontSizeInput.value;
+        lineCountValue.textContent = lineCountInput.value;
+        lineWidthValue.textContent = lineWidthInput.value;
+        lineHeightValue.textContent = lineHeightInput.value;
+      });
+    </script>
+  </body>
+</html>
