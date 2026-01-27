@@ -22,7 +22,7 @@ async function processExcel(filePath) {
     // 保存文件
     const outputPath = path.join(
       path.dirname(filePath),
-      `processed_${path.basename(filePath)}`
+      `${path.basename(filePath)}_年收益率`,
     );
     await workbook.xlsx.writeFile(outputPath);
 
@@ -248,7 +248,7 @@ function processWorksheet(worksheet) {
           console.log(
             `工作表 ${worksheet.name}, ${year}年收益: ${(
               yearReturn * 100
-            ).toFixed(2)}%`
+            ).toFixed(2)}%`,
           );
         }
       }
@@ -281,7 +281,7 @@ function processWorksheet(worksheet) {
         } else {
           const excelEpoch = new Date(Date.UTC(1899, 11, 30));
           const utcDate = new Date(
-            excelEpoch.getTime() + lastRowDateCell * 86400000
+            excelEpoch.getTime() + lastRowDateCell * 86400000,
           );
           lastDate = dayjs(utcDate);
         }
@@ -424,5 +424,5 @@ function processWorksheet(worksheet) {
 }
 
 // 使用示例
-const excelFilePath = "./红利低波-1000红利低波-红利低波100-A500红利低波.xlsx"; // 替换为您的Excel文件路径
+const excelFilePath = "./中证全指.xlsx"; // 替换为您的Excel文件路径
 processExcel(excelFilePath);
