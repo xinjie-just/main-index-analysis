@@ -424,5 +424,6 @@ function processWorksheet(worksheet) {
 }
 
 // 使用示例
-const excelFilePath = "./中证全指.xlsx"; // 替换为您的Excel文件路径
+const excelFilePath =
+  "./中证红利质量-300红利质量-500红利质量-1000红利质量-A500红利质量.xlsx"; // 替换为您的Excel文件路径
 processExcel(excelFilePath);

@@ -102,7 +102,8 @@ async function addVolatilityWithStyle(inputFilePath) {
 }
 
 // 使用
-const inputPath = "./中证全指.xlsx";
+const inputPath =
+  "./中证红利质量-300红利质量-500红利质量-1000红利质量-A500红利质量.xlsx";
 addVolatilityWithStyle(inputPath).catch((err) => {
   console.error("❌ 错误:", err);
 });
