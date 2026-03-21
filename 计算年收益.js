@@ -22,8 +22,9 @@ async function processExcel(filePath) {
     // 保存文件
     const outputPath = path.join(
       path.dirname(filePath),
-      `${path.basename(filePath)}_年收益率`,
+      `${path.basename(filePath, path.extname(filePath))}_年收益率${path.extname(filePath)}`,
     );
+
     await workbook.xlsx.writeFile(outputPath);
 
     console.log("处理完成！");
@@ -424,6 +425,5 @@ function processWorksheet(worksheet) {
 }
 
 // 使用示例
-const excelFilePath =
-  "./中证红利质量-300红利质量-500红利质量-1000红利质量-A500红利质量.xlsx"; // 替换为您的Excel文件路径
+const excelFilePath = "./港股通高股息.xlsx"; // 替换为您的Excel文件路径
 processExcel(excelFilePath);
