@@ -102,7 +102,7 @@ async function addVolatilityWithStyle(inputFilePath) {
 }
 
 // 使用
-const inputPath = "./港股通高股息.xlsx";
+const inputPath = "./中证医疗.xlsx";
 addVolatilityWithStyle(inputPath).catch((err) => {
   console.error("❌ 错误:", err);
 });
